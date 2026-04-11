@@ -2,79 +2,59 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Examen Militar / EMM</title>
+<title>Examen Multi-Materia</title>
 
 <style>
 body{
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #e8edf3, #dbe3ec);
+    font-family: 'Segoe UI', Arial;
     margin:0;
+    background:#eef2f6;
 }
 
 header{
     background:#1b2a3a;
     color:white;
-    padding:18px;
+    padding:15px;
     text-align:center;
-    font-size:20px;
-    letter-spacing:1px;
-    box-shadow:0 2px 5px rgba(0,0,0,0.2);
+    font-size:18px;
 }
 
 .container{
     width:90%;
     max-width:900px;
-    margin:25px auto;
+    margin:20px auto;
     background:white;
-    padding:30px;
-    border-radius:12px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.1);
-}
-
-textarea, input{
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    border-radius:8px;
-    border:1px solid #ccc;
-    font-size:14px;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
 button{
     width:100%;
     padding:12px;
-    margin:8px 0;
+    margin:6px 0;
+    border:none;
     background:#1b2a3a;
     color:white;
-    border:none;
     border-radius:8px;
     cursor:pointer;
-    font-size:15px;
-    transition:0.3s;
 }
 
-button:hover{
-    background:#2c3e50;
-    transform:scale(1.02);
-}
+button:hover{ background:#2c3e50; }
 
 .option{
-    padding:14px;
-    margin:10px 0;
-    border:1px solid #ddd;
+    padding:12px;
+    border:1px solid #ccc;
+    margin:8px 0;
     border-radius:8px;
     cursor:pointer;
-    transition:0.2s;
 }
 
-.option:hover{
-    background:#f2f6fa;
-}
+.option:hover{ background:#f0f0f0; }
 
 .selected{
     background:#1b2a3a;
     color:white;
-    border-color:#1b2a3a;
 }
 
 .hidden{ display:none; }
@@ -85,41 +65,33 @@ button:hover{
 }
 
 #question{
-    font-size:22px;
-    margin-bottom:20px;
-    font-weight:500;
+    font-size:20px;
+    margin:15px 0;
 }
 
-/* 🟩 BARRA */
-#timeBarContainer{
-    position:fixed;
-    bottom:25px;
-    left:0;
-    width:100%;
-    height:12px;
-    background:#d0d7de;
-    z-index:9999;
-}
-
-#timeBar{
-    height:100%;
-    width:100%;
-    background:linear-gradient(90deg,#1b2a3a,#4a6c8c);
-    transition: width 1s linear;
-}
-
-/* ⏱️ TIEMPO TOTAL */
 #totalTimeFixed{
     position:fixed;
     bottom:40px;
-    left:0;
     width:100%;
     text-align:center;
-    font-weight:bold;
-    color:#1b2a3a;
     background:white;
-    padding:6px 0;
-    box-shadow:0 -2px 5px rgba(0,0,0,0.1);
+    padding:5px;
+    font-weight:bold;
+}
+
+#bar{
+    position:fixed;
+    bottom:25px;
+    width:100%;
+    height:10px;
+    background:#ccc;
+}
+
+#barFill{
+    height:100%;
+    width:100%;
+    background:#1b2a3a;
+    transition:1s linear;
 }
 </style>
 </head>
@@ -127,22 +99,36 @@ button:hover{
 <body>
 
 <header>
-Examen Militar / EMM
-<span id="timer"></span>
+Examen Multi-Materia <span id="timer"></span>
 </header>
 
-<div class="container" id="setup">
+<!-- MENÚ -->
+<div class="container" id="menu">
 
-<h2>Configuración del examen</h2>
+<h2>Selecciona materia</h2>
+
+<button onclick="setMateria('algebra')">📘 Álgebra</button>
+<button onclick="setMateria('fisica')">🔬 Física</button>
+<button onclick="setMateria('biologia')">🧬 Biología</button>
+<button onclick="setMateria('quimica')">⚗️ Química</button>
+<button onclick="setMateria('ingles')">🇬🇧 Inglés</button>
+<button onclick="setMateria('psicologico')">🧠 Psicológico</button>
+
+</div>
+
+<!-- CONFIG -->
+<div class="container hidden" id="setup">
+
+<h2 id="materiaTitle"></h2>
 
 <input id="totalInput" type="number" placeholder="Tiempo total (minutos)">
 <input id="perInput" type="number" placeholder="Tiempo por pregunta (segundos)">
-<textarea id="txt"></textarea>
 
 <button onclick="cargar()">Iniciar examen</button>
 
 </div>
 
+<!-- EXAMEN -->
 <div class="container hidden" id="exam">
 
 <div id="info"></div>
@@ -151,35 +137,25 @@ Examen Militar / EMM
 
 <button onclick="next()">Siguiente</button>
 
+<!-- 🔥 BOTÓN NUEVO -->
+<button onclick="backMenu()" style="background:#555;">
+⬅️ Cambiar materia
+</button>
+
 </div>
 
+<!-- RESULTADOS -->
 <div class="container hidden" id="result">
-
-<h2>Resultados finales</h2>
+<h2>Resultados</h2>
 <p id="final"></p>
-
 </div>
 
-<!-- 🟩 BARRA -->
-<div id="timeBarContainer">
-    <div id="timeBar"></div>
-</div>
-
-<!-- ⏱️ TIEMPO TOTAL -->
+<div id="bar"><div id="barFill"></div></div>
 <div id="totalTimeFixed"></div>
 
 <script>
 
-const setup = document.getElementById("setup");
-const exam = document.getElementById("exam");
-const result = document.getElementById("result");
-
-const info = document.getElementById("info");
-const question = document.getElementById("question");
-const options = document.getElementById("options");
-const timer = document.getElementById("timer");
-const final = document.getElementById("final");
-
+let materia = "";
 let questions = [];
 let answers = [];
 let i = 0;
@@ -187,14 +163,67 @@ let selected = "";
 
 let totalTime;
 let perTime;
-
+let totalInitial;
 let totalInterval;
 let perInterval;
-
 let timeUsed = 0;
-let totalInitial = 0;
+
+// 📦 BANCO
+const bancos = {
+algebra:`PREGUNTA: ¿2x + 2 = 6, x=? A)1 B)2 C)3 D)4 RESPUESTA: B`,
+fisica:`PREGUNTA: ¿Unidad de fuerza? A)Joule B)Newton C)Watt D)Pascal RESPUESTA: B`,
+biologia:`PREGUNTA: ¿Organelo energía? A)Núcleo B)Mitocondria C)Ribosoma D)Golgi RESPUESTA: B`,
+quimica:`PREGUNTA: H2O es? A)Oxígeno B)Ácido C)Agua D)Gas RESPUESTA: C`,
+ingles:`PREGUNTA: Apple significa? A)Pera B)Manzana C)Uva D)Banana RESPUESTA: B`,
+psicologico:`PREGUNTA: Memoria es? A)Proceso B)Reflejo C)Instinto D)Hábito RESPUESTA: A`
+};
+
+function setMateria(m){
+    materia = m;
+    menu.classList.add("hidden");
+    setup.classList.remove("hidden");
+    document.getElementById("materiaTitle").innerText =
+    "Materia: " + m.toUpperCase();
+}
 
 function cargar(){
+
+    questions = [];
+    answers = [];
+    i = 0;
+    timeUsed = 0;
+
+    let text = bancos[materia];
+    let blocks = text.split("PREGUNTA:");
+
+    blocks.forEach(b=>{
+        if(b.includes("RESPUESTA:")){
+            let q = b.split("A)")[0].trim();
+            let a = b.split("A)")[1]?.split("B)")[0];
+            let b2 = b.split("B)")[1]?.split("C)")[0];
+            let c = b.split("C)")[1]?.split("D)")[0];
+            let d = b.split("D)")[1]?.split("RESPUESTA:")[0];
+            let r = b.split("RESPUESTA:")[1]?.trim().charAt(0);
+
+            questions.push({q,a,b:b2,c,d,r});
+        }
+    });
+
+    totalTime = (parseInt(totalInput.value) || 1) * 60;
+    perTime = parseInt(perInput.value) || 10;
+    totalInitial = totalTime;
+
+    setup.classList.add("hidden");
+    exam.classList.remove("hidden");
+
+    start();
+    show();
+}
+
+function backMenu(){
+
+    clearInterval(totalInterval);
+    clearInterval(perInterval);
 
     questions = [];
     answers = [];
@@ -202,62 +231,29 @@ function cargar(){
     selected = "";
     timeUsed = 0;
 
-    totalTime = (parseInt(document.getElementById("totalInput").value) || 1) * 60;
-    perTime = parseInt(document.getElementById("perInput").value) || 10;
-
-    totalInitial = totalTime;
-
-    let text = document.getElementById("txt").value;
-
-    let blocks = text.split("PREGUNTA:");
-
-    blocks.forEach(b=>{
-        if(b.includes("A)") && b.includes("RESPUESTA:")){
-
-            let q = b.split("A)")[0].trim();
-            let a = b.split("A)")[1].split("B)")[0]?.trim();
-            let b2 = b.split("B)")[1]?.split("C)")[0]?.trim();
-            let c = b.split("C)")[1]?.split("D)")[0]?.trim();
-            let d = b.split("D)")[1]?.split("RESPUESTA:")[0]?.trim();
-            let r = b.split("RESPUESTA:")[1]?.trim().charAt(0);
-
-            questions.push({q,a,b:b2,c,d,r});
-        }
-    });
-
-    if(questions.length === 0){
-        alert("⚠️ No se detectaron preguntas");
-        return;
-    }
-
+    exam.classList.add("hidden");
     setup.classList.add("hidden");
-    exam.classList.remove("hidden");
+    result.classList.add("hidden");
 
-    startTimers();
-    show();
+    menu.classList.remove("hidden");
 }
 
-function startTimers(){
-
-    clearInterval(totalInterval);
+function start(){
 
     totalInterval = setInterval(()=>{
 
         totalTime--;
         timeUsed++;
 
-        let min = Math.floor(totalTime/60);
-        let sec = totalTime%60;
+        let m = Math.floor(totalTime/60);
+        let s = totalTime%60;
 
-        document.getElementById("totalTimeFixed").innerText =
-        `Tiempo total: ${min}:${sec}`;
+        totalTimeFixed.innerText = `Tiempo: ${m}:${s}`;
 
-        let percent = (totalTime / totalInitial) * 100;
-        document.getElementById("timeBar").style.width = percent + "%";
+        let p = (totalTime/totalInitial)*100;
+        barFill.style.width = p + "%";
 
-        if(totalTime <= 0){
-            finish();
-        }
+        if(totalTime<=0) finish();
 
     },1000);
 }
@@ -268,52 +264,42 @@ function show(){
 
     let q = questions[i];
 
-    info.innerText = `Pregunta ${i+1} de ${questions.length}`;
+    info.innerText = `Pregunta ${i+1}/${questions.length}`;
     question.innerText = q.q;
 
     selected = "";
 
     let html = "";
-
-    ["A","B","C","D"].forEach(op=>{
-        html += `<div class="option" onclick="select('${op}',this)">
-        ${op}) ${q[op.toLowerCase()]}
+    ["A","B","C","D"].forEach(o=>{
+        html += `<div class="option" onclick="select('${o}',this)">
+        ${o}) ${q[o.toLowerCase()]}
         </div>`;
     });
 
     options.innerHTML = html;
 
     let t = perTime;
-
-    timer.innerText = `Tiempo pregunta: ${t}s`;
+    timer.innerText = t;
 
     perInterval = setInterval(()=>{
-
         t--;
-        timer.innerText = `Tiempo pregunta: ${t}s`;
-
-        if(t <= 0){
-            next();
-        }
-
+        timer.innerText = t;
+        if(t<=0) next();
     },1000);
 }
 
-function select(op,el){
-    selected = op;
-    document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
-    el.classList.add("selected");
+function select(o,e){
+    selected=o;
+    document.querySelectorAll(".option").forEach(x=>x.classList.remove("selected"));
+    e.classList.add("selected");
 }
 
 function next(){
-    answers[i] = selected || null;
-
-    if(i < questions.length-1){
+    answers[i]=selected;
+    if(i<questions.length-1){
         i++;
         show();
-    } else {
-        finish();
-    }
+    }else finish();
 }
 
 function finish(){
@@ -324,31 +310,20 @@ function finish(){
     exam.classList.add("hidden");
     result.classList.remove("hidden");
 
-    let correct = 0;
-
+    let c=0;
     questions.forEach((q,idx)=>{
-        if(answers[idx] === q.r) correct++;
+        if(answers[idx]===q.r) c++;
     });
 
-    let percent = Math.round((correct/questions.length)*100);
-    let status = percent >= 70 ? "🟢 APROBADO" : "🔴 NO APROBADO";
+    let p=Math.round((c/questions.length)*100);
+    let st=p>=70?"🟢 APROBADO":"🔴 NO APROBADO";
 
-    let min = Math.floor(timeUsed/60);
-    let sec = timeUsed%60;
-
-    final.innerHTML =
-    `Puntaje: ${percent}%<br>
-    ${status}<br>
-    Aciertos: ${correct}/${questions.length}<br><br>
-
-    ⏱️ Tiempo usado: ${min} min ${sec} seg<br><br>
-
-    <button onclick="location.reload()">🔁 Reiniciar</button>
-    <button onclick="nextTema()">📚 Siguiente tema</button>`;
-}
-
-function nextTema(){
-    location.reload();
+    final.innerHTML=
+    `Materia: ${materia}<br>
+    Puntaje: ${p}%<br>
+    ${st}<br>
+    Aciertos: ${c}/${questions.length}<br>
+    <button onclick="location.reload()">Reiniciar</button>`;
 }
 
 </script>
