@@ -145,7 +145,6 @@ textarea{
     resize:vertical;
     line-height:1.5;
 }
-
 </style>
 </head>
 
@@ -155,12 +154,10 @@ textarea{
 Prueba EMM <span id="timer"></span>
 </header>
 
-<!-- ⏱ TIEMPOS -->
 <div id="timeInfo">
 ⏱ Total: <span id="totalTimeText">--</span> | ⏳ Pregunta: <span id="questionTimeText">--</span>
 </div>
 
-<!-- MENÚ -->
 <div class="container" id="menu">
 <h2>Selecciona modo</h2>
 <button onclick="setMode('multi')">📚 Examen con materias</button>
@@ -168,7 +165,6 @@ Prueba EMM <span id="timer"></span>
 <button onclick="setMode('psico')">🧠 Psicológico (V/F)</button>
 </div>
 
-<!-- SETUP -->
 <div class="container hidden" id="setup">
 <h2 id="title"></h2>
 
@@ -181,7 +177,6 @@ Prueba EMM <span id="timer"></span>
 <button onclick="back()">⬅️ Volver</button>
 </div>
 
-<!-- EXAM -->
 <div class="container hidden" id="exam">
 <div id="info"></div>
 <div id="question"></div>
@@ -190,7 +185,6 @@ Prueba EMM <span id="timer"></span>
 <button onclick="next()">Siguiente</button>
 </div>
 
-<!-- RESULT -->
 <div class="container hidden" id="result">
 <h2>Resultados</h2>
 <p id="final"></p>
@@ -201,6 +195,7 @@ Prueba EMM <span id="timer"></span>
 let mode="";
 let questions=[];
 let answers=[];
+let failed=[]; // ✅ agregado
 let i=0;
 let selected="";
 
@@ -226,6 +221,7 @@ function start(){
 
     questions=[];
     answers=[];
+    failed=[]; // ✅ agregado
     i=0;
 
     let text=document.getElementById("txt").value;
@@ -353,19 +349,44 @@ function finish(){
     result.classList.remove("hidden");
 
     let c=0;
+    failed=[];
 
     questions.forEach((q,i)=>{
-        if(answers[i]===q.r) c++;
+        if(answers[i]===q.r){
+            c++;
+        }else{
+            failed.push({
+                pregunta: q.q,
+                correcta: q.r,
+                usuario: answers[i] || "Sin responder"
+            });
+        }
     });
 
     let p=Math.round((c/questions.length)*100);
-
     let status = p >= 70 ? "🟢 APTO" : "🔴 NO APTO";
+
+    let failedHTML = "";
+
+    if(failed.length > 0){
+        failedHTML += "<h3>❌ Preguntas falladas:</h3>";
+
+        failed.forEach((f, index)=>{
+            failedHTML += `
+            <div style="margin-bottom:15px; padding:10px; border:1px solid #ddd; border-radius:10px;">
+                <b>${index+1}.</b> ${f.pregunta}<br>
+                ❌ Tu respuesta: ${f.usuario}<br>
+                ✅ Correcta: ${f.correcta}
+            </div>
+            `;
+        });
+    }
 
     final.innerHTML=`
     Puntaje: ${p}%<br>
     Estado: ${status}<br>
     Aciertos: ${c}/${questions.length}<br>
+    ${failedHTML}
     <button onclick="location.reload()">Reiniciar</button>
     `;
 }
